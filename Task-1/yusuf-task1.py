@@ -1,120 +1,123 @@
 import random
 
-class Kart:
-    def __init__(self, suit, rank):
-        self.suit = suit
-        self.rank = rank
-        self.value = values[rank]
+# Kart destesi ve değerleri
+CARD_VALUES = {
+    "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10,
+    "J": 10, "Q": 10, "K": 10, "A": (1, 11)
+}
+CARD_DECK = list(CARD_VALUES.keys()) * 4
 
-    def __str__(self):
-        return self.rank + " " + self.suit
+# Oyuncu sınıfı
+class Player:
+    def __init__(self, name, balance):
+        self.name = name
+        self.balance = balance
+        self.hand = []
 
-class Deste:
-    def __init__(self):
-        self.deck = []
-        for suit in suits:
-            for rank in ranks:
-                self.deck.append(Kart(suit, rank))
-        self.karistir()
+    def calculate_score(self):
+        score = 0
+        aces = 0
+        for card in self.hand:
+            if card == "A":
+                aces += 1
+                score += 11
+            else:
+                score += CARD_VALUES[card]
+        
+        # Aşım kontrolü için Asları ayarla
+        while score > 21 and aces:
+            score -= 10
+            aces -= 1
+        
+        return score
 
-    def karistir(self):
-        random.shuffle(self.deck)
+    def add_card(self, card):
+        self.hand.append(card)
 
-    def dagit(self):
-        return self.deck.pop()
+# Blackjack menüsü
+def show_menu():
+    print("\nBlackjack oyununa hoş geldiniz!")
+    print("1. Oyunu Başlat")
+    print("2. Bakiye Görüntüle")
+    print("3. Çıkış Yap")
+    print("--------")
+    choice = input("Seçiminizi yapın (1/2/3): ")
+    return choice
 
-class El:
-    def __init__(self):
-        self.cards = []
-        self.deger = 0
-        self.aslar = 0
+# Oyunun ana akışı
+def blackjack():
+    print("Blackjack oyununa hoş geldiniz!")
+    name = input("Adınızı girin: ")
+    starting_balance = 100  # Başlangıç bakiyesi
 
-    def kart_ekle(self, card):
-        self.cards.append(card)
-        self.deger += values[card.rank]
-        if card.rank == 'As':
-            self.aslar += 1
+    while True:
+        # Oyuncunun başlangıç bakiyesi her yeni oyun için sıfırlanır
+        player = Player(name, starting_balance)
 
-    def as_ayarla(self):
-        while self.deger > 21 and self.aslar:
-            self.deger -= 10
-            self.aslar -= 1
+        choice = show_menu()
+        if choice == "1":
+            print(f"\nYeni oyun başlatıldı! Bakiyeniz: {player.balance} TL")
+            try:
+                bet = int(input("Bahis miktarını girin: "))
+                if bet > player.balance or bet <= 0:
+                    print("Geçersiz bahis miktarı!")
+                    continue
+            except ValueError:
+                print("Lütfen geçerli bir sayı girin!")
+                continue
 
-suits = ("Kalp", "Sinek", "Maça", "Karo")
-ranks = ("İki", "Üç", "Dört", "Beş", "Altı", "Yedi", "Sekiz", "Dokuz", "On", "Vale", "Kız", "Papaz", "As")
-values = {'İki':2, 'Üç':3, 'Dört':4, 'Beş':5, 'Altı':6, 'Yedi':7, 'Sekiz':8, 'Dokuz':9, 'On':10, 'Vale':10,
-         'Kız':10, 'Papaz':10, 'As':11}
+            # Kartları karıştır ve başlangıç ellerini dağıt
+            random.shuffle(CARD_DECK)
+            player.hand = [random.choice(CARD_DECK) for _ in range(2)]
+            dealer_hand = [random.choice(CARD_DECK) for _ in range(2)]
 
-def oyun():
-    isim = input("Adınızı giriniz: ")
-    para = 100  # Başlangıç parası
-    toplam_kazanc = 0
-    while para > 0:
-        print(f"{isim}, paranız: {para} TL")
-        bahis = int(input("Bahsinizi girin: "))
+            print(f"\n{player.name}'in kartları: {player.hand} (Skor: {player.calculate_score()})")
+            print(f"Krupiyenin açık kartı: {dealer_hand[0]}")
 
-        while bahis > para:
-            print("Yetersiz bakiye. Lütfen daha düşük bir bahis girin.")
-            bahis = int(input("Bahsinizi girin: "))
-
-        # Yeni bir deste oluştur ve karıştır
-        deste = Deste()
-        deste.karistir()
-
-        # Oyuncu ve krupiye için yeni eller oluştur
-        oyuncu_eli = El()
-        krupiye_eli = El()
-
-        # Her birine ikişer kart dağıt
-        for _ in range(2):
-            oyuncu_eli.kart_ekle(deste.dagit())
-            krupiye_eli.kart_ekle(deste.dagit())
-
-        # Oyuncunun hamleleri
-        while True:
-            print("\nElinizdeki kartlar:")
-            for card in oyuncu_eli.cards:
-                print(card)
-            print("Elinizin değeri:", oyuncu_eli.deger)
-
-            hamle = input("Kart çekmek için 'c', durmak için 'd' veya oyunu bırakmak için 'q' tuşuna basın: ")
-            if hamle.lower() == 'c':
-                oyuncu_eli.kart_ekle(deste.dagit())
-                if oyuncu_eli.deger > 21:
-                    print("Elinizin değeri 21'i geçti. Kaybettiniz.")
+            # Oyuncu hareketi
+            while True:
+                action = input("Hareket seç (kart çek/pas geç): ").lower()
+                if action == "kart çek":
+                    player.add_card(random.choice(CARD_DECK))
+                    print(f"Yeni kartınız: {player.hand[-1]}")
+                    print(f"Güncel skorunuz: {player.calculate_score()}")
+                    if player.calculate_score() > 21:
+                        print("Bust! Kaybettiniz.")
+                        player.balance -= bet
+                        break
+                elif action == "pas geç":
                     break
-            elif hamle.lower() == 'd':
-                break
-            elif hamle.lower() == 'q':
-                print("Oyunu bıraktınız.")
-                return
-            else:
-                print("Geçersiz giriş.")
+                else:
+                    print("Geçersiz seçim! Lütfen 'kart çek' veya 'pas geç' yazın.")
+            
+            # Krupiyenin hareketi
+            if player.calculate_score() <= 21:
+                print("\nKrupiye oynuyor...")
+                while sum(CARD_VALUES[card] if card != "A" else 11 for card in dealer_hand) < 17:
+                    dealer_hand.append(random.choice(CARD_DECK))
+                
+                dealer_score = sum(CARD_VALUES[card] if card != "A" else 11 for card in dealer_hand)
+                print(f"Krupiyenin kartları: {dealer_hand} (Skor: {dealer_score})")
 
-        # Oyuncu 21'i geçmediyse krupiye oynamaya devam eder
-        if oyuncu_eli.deger <= 21:
-            # Krupiyenin hamleleri (önceki kodlardan aynı)
+                # Kazanan belirleme
+                if dealer_score > 21 or player.calculate_score() > dealer_score:
+                    print("Tebrikler! Kazandınız.")
+                    player.balance += bet
+                elif player.calculate_score() < dealer_score:
+                    print("Krupiye kazandı!")
+                    player.balance -= bet
+                else:
+                    print("Beraberlik!")
 
-            # Kazananı belirle ve parayı güncelle
-            if krupiye_eli.deger > 21:
-                print("Kazandınız!")
-                para += bahis
-                toplam_kazanc += bahis
-            elif oyuncu_eli.deger > krupiye_eli.deger:
-                print("Kazandınız!")
-                para += bahis
-                toplam_kazanc += bahis
-            elif oyuncu_eli.deger < krupiye_eli.deger:
-                print("Kaybettiniz.")
-                para -= bahis
-            else:
-                print("Berabere.")
+        elif choice == "2":
+            print(f"Mevcut bakiyeniz: {player.balance} TL")
 
-        devam = input("Oyunu devam ettirmek ister misiniz? (e/h): ")
-        if devam.lower() != 'e':
+        elif choice == "3":
+            print("Oyundan çıkılıyor. Görüşmek üzere!")
             break
+        else:
+            print("Geçersiz seçim! Lütfen 1, 2 veya 3 girin.")
 
-    print(f"{isim}, toplam kazancınız: {toplam_kazanc} TL")
-    print("Oyun bitti.")
-
-oyun()
+# Oyunu başlat
+if __name__ == "__main__":
+    blackjack()
