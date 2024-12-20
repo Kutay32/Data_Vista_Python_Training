@@ -3,6 +3,7 @@ import csv
 def kullanici_girisi():
     ad = input("Lütfen takma adınızı giriniz: ")
     return ad
+
 def puanlari_yukle():
     try:
         with open('leaderboard.csv') as file:
@@ -11,10 +12,11 @@ def puanlari_yukle():
     except FileNotFoundError:
         puanlar = {}
     return puanlar
+
 def puanlari_kaydet(puanlar):
-    with open('leaderboard.csv') as file:
+    with open('leaderboard.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
-        for ad, puan in puanlar():
+        for ad, puan in puanlar.items():
             writer.writerow([ad, puan])
 
 def liderlik_tablosu_goster(puanlar):
@@ -43,8 +45,10 @@ def zorluk_seviyesi_sec():
                 return None
 
 def sayi_tahmin_oyunu():
+    global tahmin
     puanlar = puanlari_yukle()
     ad = kullanici_girisi()
+
     if ad in puanlar:
         toplam_puan = puanlar[ad]
         print(f"Hoş geldiniz {ad}! Şu anki toplam puanınız: {toplam_puan}")
@@ -83,8 +87,14 @@ def sayi_tahmin_oyunu():
         print(f"Oyununuz bitti. {ad}, toplam puanınız: {toplam_puan}")
         liderlik_tablosu_goster(puanlar)
 
-        devam = input("Tekrar oynamak ister misiniz? (E/H): ")
+        while True:
+            devam = input("Tekrar oynamak ister misiniz? (E/H): ")
+            if devam == 'E' or devam == 'H':
+                break
+            else:
+                print("Geçersiz seçim. Tekrar deneyiniz.")
+
         if devam != 'E':
-            print(f"Oyunu bıraktınız. Toplam puanınız: {toplam_puan}")
+            print(f"Oyununuz bitti. Toplam puanınız: {toplam_puan}")
             break
 sayi_tahmin_oyunu()
