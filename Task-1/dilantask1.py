@@ -70,6 +70,9 @@ def blackjack_oyna():
 
             while True:
                 hamle = input("Bir kart daha çekmek ister misiniz? (e/h): ").lower()
+                while hamle not in ['e', 'h']:
+                    print("Geçersiz seçim. Tekrar deneyiniz.")
+                    hamle = input("Bir kart daha çekmek ister misiniz? (e/h): ").lower()
                 if hamle == 'e':
                     oyuncu_eli.append(kart_cek(deste))
                     print(f"Yeni kartınız: {oyuncu_eli[-1]}")
